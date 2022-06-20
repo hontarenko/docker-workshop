@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: events_api
+    image: engineeringamomedia/docker-workshop:v1
+    ports:
+      - '8080:8080'
+    restart: always
+    environment:
+      PORT: 8080 
+      DB_CONN: "postgres://user:password@db:5432/db?sslmode=disable"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - events_api
+  
+  db:
+    image: postgres:14.3-alpine
+    container_name: events_db
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "db"
+      TZ: "UTC"
+      PGTZ: "UTC"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - api-db:/var/lib/postgresql/data
+    networks:
+      - events_api
+
+networks:
+  events_api:
+    name: apishka
+
+volumes:
+  api-db:
